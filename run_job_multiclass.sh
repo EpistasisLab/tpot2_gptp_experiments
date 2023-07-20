@@ -3,16 +3,16 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=48
-#SBATCH -t 5:00:00
+#SBATCH -t 16:40:00
 #SBATCH --mem=0
 #SBATCH --job-name=tpot2bench
-#SBATCH -p preemptable
+#SBATCH -p moore,defq
 #SBATCH --exclusive
-#SBATCH --exclude "esplhpc-cp040"
+
 #SBATCH -o ./logs/output.%j_%a.out # STDOUT
-#SBATCH --array=1-200
+#SBATCH --array=1-34
 
-
+source /common/ribeirop/minconda3/etc/profile.d/conda.sh
 conda activate tpot2env
 
 srun -u python run_tpot_on_openml_for_paper_multiclass.py \

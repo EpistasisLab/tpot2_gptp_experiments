@@ -5,7 +5,7 @@ import sklearn
 from sklearn.metrics import (roc_auc_score, roc_curve, precision_score, auc, recall_score, precision_recall_curve, \
                              roc_auc_score, accuracy_score, balanced_accuracy_score, f1_score, log_loss,
                              f1_score)
-
+import traceback
 import dill as pickle
 import os
 import time
@@ -14,7 +14,8 @@ import openml
 import tpot2
 import sklearn.datasets
 import numpy as np
-
+import copy
+import random
 
 def score(est, X, y):
 
@@ -68,78 +69,86 @@ def load_task(task_id, preprocess=True):
         X_train = X_train.to_numpy()
         X_test = X_test.to_numpy()
 
+        if task_id == 168795: #this task does not have enough instances of two classes for 10 fold CV. This function samples the data to make sure we have at least 10 instances of each class
+            indices = [28535, 28535, 24187, 18736,  2781]
+            y_train = np.append(y_train, y_train[indices])
+            X_train = np.append(X_train, X_train[indices], axis=0)
+
 
     return X_train, y_train, X_test, y_test
 
 
 def loop_through_tasks(experiments, task_id_lists, base_save_folder, num_runs):
-     for taskid in task_id_lists:
-            for run in range(num_runs):
-                for exp in experiments:
-                    save_folder = f"{base_save_folder}/{exp['exp_name']}_{taskid}_{run}"
-                    if not os.path.exists(save_folder):
-                        os.makedirs(save_folder)
-                    else:
-                        continue
+    for taskid in task_id_lists:
+        for run in range(num_runs):
+            for exp in experiments:
+                
+                save_folder = f"{base_save_folder}/{exp['exp_name']}_{taskid}_{run}"
+                time.sleep(random.random()*10)
+                if not os.path.exists(save_folder):
+                    os.makedirs(save_folder)
+                else:
+                    continue
 
-                    print("working on ")
+                print("working on ")
+                print(save_folder)
+
+                try: 
+
+                    print("loading data")
+                    X_train, y_train, X_test, y_test = load_task(taskid, preprocess=True)
+
+
+                    print("starting ml")
+                    est = exp['automl'](**exp['params'])
+                    
+                    print(est.optuna_storage)
+                    start = time.time()
+                    est.fit(X_train, y_train)
+                    duration = time.time() - start
+                    
+                    if type(est) is tpot.TPOTClassifier:
+                        est.classes_ = est.fitted_pipeline_.classes_
+
+                    train_score = score(est, X_train, y_train)
+                    test_score = score(est, X_test, y_test)
+
+                    all_scores = {}
+                    train_score = {f"train_{k}": v for k, v in train_score.items()}
+                    all_scores.update(train_score)
+                    all_scores.update(test_score)
+
+                    
+                    all_scores["taskid"] = taskid
+                    all_scores["exp_name"] = exp['exp_name']
+                    #all_scores["name"] = openml.datasets.get_dataset(openml.tasks.get_task(taskid).dataset_id).name
+                    all_scores["duration"] = duration
+                    all_scores["run"] = run
+
+                    if type(est) is tpot2.TPOTEstimator or type(est) is  tpot2.TPOTEstimatorSteadyState:
+                        with open(f"{save_folder}/evaluated_individuals.pkl", "wb") as f:
+                            pickle.dump(est.evaluated_individuals, f)
+
+                    
+                    with open(f"{save_folder}/fitted_pipeline.pkl", "wb") as f:
+                        pickle.dump(est.fitted_pipeline_, f)
+
+
+                    with open(f"{save_folder}/scores.pkl", "wb") as f:
+                        pickle.dump(all_scores, f)
+
+                    return
+                except Exception as e:
+                    trace =  traceback.format_exc()
+                    pipeline_failure_dict = {"taskid": taskid, "exp_name": exp['exp_name'], "run": run, "error": str(e), "trace": trace}
+                    print("failed on ")
                     print(save_folder)
+                    print(e)
+                    print(trace)
 
-                    try: 
+                    with open(f"{save_folder}/failed.pkl", "wb") as f:
+                        pickle.dump(pipeline_failure_dict, f)
 
-                        print("loading data")
-                        X_train, y_train, X_test, y_test = load_task(taskid, preprocess=True)
-
-                        if taskid == 168795: #this task does not have enough instances of two classes for 10 fold CV. This function samples the data to make sure we have at least 10 instances of each class
-                            indices = [28535, 28535, 24187, 18736,  2781]
-                            y_train = np.append(y_train, y_train[indices])
-                            X_train = np.append(X_train, X_train[indices], axis=0)
-
-
-                        print("starting ml")
-                        est = exp['automl'](**exp['params'])
-                        start = time.time()
-                        est.fit(X_train, y_train)
-                        duration = time.time() - start
-                        
-                        if type(est) is tpot.TPOTClassifier:
-                            est.classes_ = est.fitted_pipeline_.classes_
-
-                        train_score = score(est, X_train, y_train)
-                        test_score = score(est, X_test, y_test)
-
-                        all_scores = {}
-                        train_score = {f"train_{k}": v for k, v in train_score.items()}
-                        all_scores.update(train_score)
-                        all_scores.update(test_score)
-
-                        
-                        all_scores["taskid"] = taskid
-                        all_scores["exp_name"] = exp['exp_name']
-                        all_scores["name"] = openml.datasets.get_dataset(openml.tasks.get_task(taskid).dataset_id).name
-                        all_scores["duration"] = duration
-                        all_scores["run"] = run
-
-                        if type(est) is tpot2.TPOTClassifier:
-                            with open(f"{save_folder}/evaluated_individuals.pkl", "wb") as f:
-                                pickle.dump(est.evaluated_individuals, f)
-
-                        
-                        with open(f"{save_folder}/fitted_pipeline.pkl", "wb") as f:
-                            pickle.dump(est.fitted_pipeline_, f)
-
-
-                        with open(f"{save_folder}/scores.pkl", "wb") as f:
-                            pickle.dump(all_scores, f)
-
-                        return
-                    except Exception as e:
-                        pipeline_failure_dict = {"taskid": taskid, "exp_name": exp['exp_name'], "run": run, "error": str(e)}
-                        print("failed on ")
-                        print(save_folder)
-                        print(e)
-
-                        with open(f"{save_folder}/failed.pkl", "wb") as f:
-                            pickle.dump(pipeline_failure_dict, f)
-
-                        return
+                    return
+    
+    print("all finished")

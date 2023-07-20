@@ -7,28 +7,27 @@ import utils
 import tpot2
 import sklearn.datasets
 
-
 def main():
     # Read in arguements
     parser = argparse.ArgumentParser()
 
     #where to save the results/models
-    parser.add_argument("-s", "--savepath", default="multiclass_results", required=False, nargs='?')
+    parser.add_argument("-s", "--savepath", default="binary_results", required=False, nargs='?')
 
     #number of total runs for each experiment
     parser.add_argument("-r", "--num_runs", default=1, required=False, nargs='?')
 
     args = parser.parse_args()
-    n_jobs = 48
+    n_jobs = 24
     base_save_folder = args.savepath
     num_runs = int(args.num_runs)
 
     experiments = [
                         {
                         'automl': tpot.TPOTClassifier,
-                        'exp_name' : 'tpot_untimed_30_gen_neg_log_loss',
+                        'exp_name' : 'tpot_untimed_30_gen_roc_auc',
                         'params': {
-                                    'scoring': 'neg_log_loss',
+                                    'scoring': 'roc_auc',
                                     'population_size' : 48, 
                                     'generations' : 30, 
                                     'n_jobs':n_jobs,
@@ -41,11 +40,11 @@ def main():
 
                                                                                                                         {
                         'automl': tpot2.TPOTEstimator,
-                        'exp_name' : 'tpot2_untimed_30_gen_neg_log_loss',
+                        'exp_name' : 'tpot2_untimed_30_gen_roc_auc',
                         'params': {
                     
-                        'scorers' :     ['neg_log_loss'],   
-                        'scorers_weights': [1] ,
+                                        'scorers' :     ['roc_auc'],     
+                                        'scorers_weights': [1] ,
                                         'population_size' : 48, 
                                         'generations' : 30, 
                                         'n_jobs':n_jobs,
@@ -67,27 +66,11 @@ def main():
                                         'classification':True,
                             },
                             },
+
     ]
         
-    task_id_lists = [
-                            168794,
-                            189873,
-                            167152,
-                            189909,
-                            189872,
-                            168795, #This one has fewer than 10 instances of a class
-                            167185,
-                            189905,
-                            189874,
-                            75193,
-                            167168,
-                            168793,
-                            189906,
-                            167201,
-                            189908,
-                            168792,
-                            189871
-                            ]
+    task_id_lists = [189866
+                    ]
     
     utils.loop_through_tasks(experiments, task_id_lists, base_save_folder, num_runs)
 
