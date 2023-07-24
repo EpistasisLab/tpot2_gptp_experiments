@@ -24,22 +24,8 @@ def main():
     num_runs = int(args.num_runs)
 
     experiments = [
-                        {
-                        'automl': tpot.TPOTClassifier,
-                        'exp_name' : 'tpot_untimed_30_gen_neg_log_loss',
-                        'params': {
-                                    'scoring': 'neg_log_loss',
-                                    'population_size' : 48, 
-                                    'generations' : 30, 
-                                    'n_jobs':n_jobs,
-                                    'cv': sklearn.model_selection.StratifiedKFold(n_splits=10, shuffle=True, random_state=42),
-                                    'verbosity': 2, 
-                                    'max_time_mins': None,
-                                    'max_eval_time_mins' : 5,         
-                        },
-                        },
 
-                                                                                                                        {
+                                                                                                                                {
                         'automl': tpot2.TPOTEstimator,
                         'exp_name' : 'tpot2_untimed_30_gen_neg_log_loss',
                         'params': {
@@ -58,15 +44,32 @@ def main():
                                         'mutate_probability':.90,
                                         'mutate_then_crossover_probability':0,
                                         'crossover_then_mutate_probability':0,
-
-                                        'other_objective_functions' : [tpot2.estimator_objective_functions.number_of_nodes_objective],
+                                        
+                                        'other_objective_functions' : [tpot2.objectives.number_of_nodes_objective],
                                         'other_objective_functions_weights':[-1],
                                         
-                                        'memory_limit':'20GB', 
+                                        'memory_limit':None,
                                         'preprocessing':False,
                                         'classification':True,
                             },
                             },
+
+                        {
+                        'automl': tpot.TPOTClassifier,
+                        'exp_name' : 'tpot_untimed_30_gen_neg_log_loss',
+                        'params': {
+                                    'scoring': 'neg_log_loss',
+                                    'population_size' : 48, 
+                                    'generations' : 30, 
+                                    'n_jobs':n_jobs,
+                                    'cv': sklearn.model_selection.StratifiedKFold(n_splits=10, shuffle=True, random_state=42),
+                                    'verbosity': 2, 
+                                    'max_time_mins': None,
+                                    'max_eval_time_mins' : 5,         
+                        },
+                        },
+
+
     ]
         
     task_id_lists = [

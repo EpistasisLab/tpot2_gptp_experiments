@@ -79,9 +79,10 @@ def load_task(task_id, preprocess=True):
 
 
 def loop_through_tasks(experiments, task_id_lists, base_save_folder, num_runs):
-    for taskid in task_id_lists:
-        for run in range(num_runs):
-            for exp in experiments:
+    for exp in experiments:
+        for taskid in task_id_lists:
+            for run in range(num_runs):
+                
                 
                 save_folder = f"{base_save_folder}/{exp['exp_name']}_{taskid}_{run}"
                 time.sleep(random.random()*10)
@@ -102,13 +103,9 @@ def loop_through_tasks(experiments, task_id_lists, base_save_folder, num_runs):
                     print("starting ml")
                     est = exp['automl'](**exp['params'])
                     
-                    print(est.optuna_storage)
                     start = time.time()
                     est.fit(X_train, y_train)
                     duration = time.time() - start
-                    
-                    if type(est) is tpot.TPOTClassifier:
-                        est.classes_ = est.fitted_pipeline_.classes_
 
                     train_score = score(est, X_train, y_train)
                     test_score = score(est, X_test, y_test)
