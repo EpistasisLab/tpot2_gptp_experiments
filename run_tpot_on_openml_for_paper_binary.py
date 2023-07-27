@@ -46,7 +46,7 @@ def main():
                                         'other_objective_functions' : [tpot2.objectives.number_of_nodes_objective],
                                         'other_objective_functions_weights':[-1],
                                         
-                                        'memory_limit':None,
+                                        'memory_limit':"20GB",
                                         'preprocessing':False,
                                         'classification':True,
                             },
@@ -71,7 +71,9 @@ def main():
 
     ]
         
-    task_id_lists = [189865,
+    task_id_lists = [
+        #189866,
+        189865,
                     167200,
                     126026,
                     189860,
@@ -82,7 +84,7 @@ def main():
                     126029,
                     168796,
                     167190,
-                    #189866,
+                    
                     167104,
                     167083,
                     167184,

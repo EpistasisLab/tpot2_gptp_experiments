@@ -48,7 +48,7 @@ def main():
                                         'other_objective_functions' : [tpot2.objectives.number_of_nodes_objective],
                                         'other_objective_functions_weights':[-1],
                                         
-                                        'memory_limit':None,
+                                        'memory_limit':"20GB",
                                         'preprocessing':False,
                                         'classification':True,
                             },

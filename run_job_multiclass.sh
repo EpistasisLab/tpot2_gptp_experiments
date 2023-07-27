@@ -4,7 +4,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=48
 #SBATCH -t 5:00:00
-#SBATCH --mem=0
+#SBATCH --mem=1000G  
 #SBATCH --job-name=tpot2bench
 #SBATCH -p moore,defq
 #SBATCH --exclusive
@@ -16,5 +16,5 @@ source /common/ribeirop/minconda3/etc/profile.d/conda.sh
 conda activate tpot2env
 
 srun -u python run_tpot_on_openml_for_paper_multiclass.py \
---savepath results/results_multi \
+--savepath results3/results_multi \
 --num_runs 5 \
