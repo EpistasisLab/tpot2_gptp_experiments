@@ -60,7 +60,7 @@ def main():
                         'params': {
                                     'scoring': 'roc_auc',
                                     'population_size' : 48, 
-                                    'generations' : 30, 
+                                    'generations' : 29, 
                                     'n_jobs':n_jobs,
                                     'cv': sklearn.model_selection.StratifiedKFold(n_splits=10, shuffle=True, random_state=42),
                                     'verbosity': 2, 

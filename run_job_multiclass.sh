@@ -16,5 +16,5 @@ source /common/ribeirop/minconda3/etc/profile.d/conda.sh
 conda activate tpot2env
 
 srun -u python run_tpot_on_openml_for_paper_multiclass.py \
---savepath results3/results_multi \
+--savepath results/results_multi \
 --num_runs 5 \
